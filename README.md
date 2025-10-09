@@ -86,24 +86,40 @@ Run the `Launcher.java` class as a Java application.
 ## **📁 Project Structure**
 
 PatraKosh/
+
 ├── src/main/
+
 │ ├── java/com/patrakosh/
+
 │ │ ├── controller/
+
 │ │ ├── dao/
+
 │ │ ├── model/
+
 │ │ ├── service/
+
 │ │ ├── util/
+
 │ │ ├── Launcher.java
+
 │ │ └── MainApp.java
+
 │ └── resources/
+
 │ ├── fxml/
+
 │ └── application.properties
+
 ├── storage/
+
 ├── database_setup.sql
+
 ├── pom.xml
+
 └── README.md
 
-text
+
 
 ---
 
