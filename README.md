@@ -36,9 +36,9 @@ Enjoy a beautiful, intuitive interface for uploading, downloading, searching, an
 ### **1. Clone the Repository**
 
 git clone https://github.com/abhaypratap08/PatraKosh.git
+
 cd PatraKosh
 
-text
 
 ### **2. Set Up the MySQL Database**
 
