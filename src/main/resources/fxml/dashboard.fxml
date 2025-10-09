@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.patrakosh.controller.DashboardController"
+            style="-fx-background-color: #F5EFE6;">
+    
+    <!-- Top Navigation Bar -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" 
+              style="-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 0 0 1 0; -fx-padding: 15 25;">
+            
+            <!-- Logo and App Name -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <!-- ICON: Uncomment below to use custom logo icon -->
+                <!-- <ImageView fitWidth="32" fitHeight="32" preserveRatio="true">
+                    <image>
+                        <Image url="@../icons/logo.png"/>
+                    </image>
+                </ImageView> -->
+                <!-- Default emoji icon (remove when using custom icon) -->
+                <Label text="📦" style="-fx-font-size: 24px;"/>
+                
+                <Label text="PatraKosh" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2196F3;"/>
+            </HBox>
+            
+            <!-- Spacer -->
+            <Region HBox.hgrow="ALWAYS"/>
+            
+            <!-- Welcome Message -->
+            <Label fx:id="welcomeLabel" text="Welcome, User" style="-fx-font-size: 14px; -fx-text-fill: #424242;"/>
+            
+            <!-- User Menu -->
+            <MenuButton fx:id="userMenuButton" 
+                       style="-fx-background-color: #F5EFE6; -fx-background-radius: 20; -fx-font-size: 16px; -fx-cursor: hand; -fx-padding: 8 15; -fx-border-color: #D4C5B0; -fx-border-width: 1;">
+                <!-- ICON: Uncomment below to use custom user icon -->
+                <!-- <graphic>
+                    <ImageView fitWidth="20" fitHeight="20" preserveRatio="true">
+                        <image>
+                            <Image url="@../icons/user.png"/>
+                        </image>
+                    </ImageView>
+                </graphic> -->
+                <!-- Default emoji icon (remove when using custom icon) -->
+                <text>👤</text>
+                
+                <items>
+                    <MenuItem text="Profile" disable="true"/>
+                    <MenuItem text="Settings" disable="true"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem fx:id="logoutMenuItem" text="Logout" onAction="#handleLogout"/>
+                </items>
+            </MenuButton>
+        </HBox>
+    </top>
+    
+    <!-- Main Content -->
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: #F5EFE6; -fx-background-color: #F5EFE6;" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+            <VBox spacing="0" style="-fx-background-color: #F5EFE6;">
+            
+            <!-- Action Bar -->
+            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 20 25; -fx-background-color: #F5EFE6;">
+                
+                <!-- Upload Button -->
+                <Button fx:id="uploadButton" text="⬆ Upload" onAction="#handleUpload"
+                       style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
+                    <!-- ICON: Uncomment below to use custom upload icon -->
+                    <!-- <graphic>
+                        <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                            <image>
+                                <Image url="@../icons/upload.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic> -->
+                </Button>
+                
+                <!-- Download Button -->
+                <Button text="⬇ Download" 
+                       style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
+                    <!-- ICON: Uncomment below to use custom download icon -->
+                    <!-- <graphic>
+                        <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                            <image>
+                                <Image url="@../icons/download.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic> -->
+                </Button>
+                
+                <!-- Delete Button -->
+                <Button text="🗑 Delete" 
+                       style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
+                    <!-- ICON: Uncomment below to use custom delete icon -->
+                    <!-- <graphic>
+                        <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                            <image>
+                                <Image url="@../icons/delete.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic> -->
+                </Button>
+                
+                <!-- Rename Button -->
+                <Button text="✏ Rename" 
+                       style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
+                    <!-- ICON: Uncomment below to use custom rename icon -->
+                    <!-- <graphic>
+                        <ImageView fitWidth="16" fitHeight="16" preserveRatio="true">
+                            <image>
+                                <Image url="@../icons/rename.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic> -->
+                </Button>
+                
+                <!-- Spacer -->
+                <Region HBox.hgrow="ALWAYS"/>
+                
+                <!-- Search Bar -->
+                <HBox alignment="CENTER_LEFT" spacing="0" 
+                      style="-fx-background-color: white; -fx-border-color: #D0D0D0; -fx-border-width: 1; -fx-border-radius: 20; -fx-background-radius: 20;">
+                    <!-- ICON: Uncomment below to use custom search icon -->
+                    <!-- <ImageView fitWidth="16" fitHeight="16" preserveRatio="true" style="-fx-padding: 0 10 0 15;">
+                        <image>
+                            <Image url="@../icons/search.png"/>
+                        </image>
+                    </ImageView> -->
+                    <!-- Default emoji icon (remove when using custom icon) -->
+                    <Label text="🔍" style="-fx-font-size: 14px; -fx-padding: 0 10 0 15;"/>
+                    
+                    <TextField fx:id="searchField" promptText="Search files..." 
+                              style="-fx-background-color: transparent; -fx-border-width: 0; -fx-padding: 8 15; -fx-font-size: 13px;"
+                              prefWidth="200" onKeyReleased="#handleSearch"/>
+                </HBox>
+            </HBox>
+            
+            <!-- Files Table Container -->
+            <VBox spacing="0" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color: #F5EFE6; -fx-padding: 0 25 25 25;">
+                
+                <VBox spacing="10" VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 0; -fx-padding: 20;">
+                
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Filename" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #8B7355;" prefWidth="400"/>
+                    <Label text="Uploaded" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #8B7355;"/>
+                </HBox>
+                
+                <!-- Files Table -->
+                <TableView fx:id="filesTable" VBox.vgrow="ALWAYS"
+                          style="-fx-background-color: transparent; -fx-border-width: 0;">
+                    <columns>
+                        <TableColumn fx:id="iconColumn" text="" prefWidth="50" sortable="false" resizable="false"/>
+                        <TableColumn fx:id="filenameColumn" text="Filename" prefWidth="300"/>
+                        <TableColumn fx:id="sizeColumn" text="Size" prefWidth="120"/>
+                        <TableColumn fx:id="uploadDateColumn" text="Upload Date" prefWidth="180"/>
+                        <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="150" sortable="false" resizable="false"/>
+                    </columns>
+                    <placeholder>
+                        <VBox alignment="CENTER" spacing="10" style="-fx-padding: 40;">
+                            <Label text="No content in table" style="-fx-font-size: 14px; -fx-text-fill: #999999;"/>
+                        </VBox>
+                    </placeholder>
+                </TableView>
+                </VBox>
+            </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+    
+    <!-- Status Bar -->
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="20" 
+              style="-fx-background-color: #192A51; -fx-padding: 8 25;">
+            <Label fx:id="statusLabel" text="Loaded 0 files." style="-fx-font-size: 11px; -fx-text-fill: white;"/>
+        </HBox>
+    </bottom>
+</BorderPane>
