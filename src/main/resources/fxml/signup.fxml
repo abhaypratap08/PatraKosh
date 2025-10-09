@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+           fx:controller="com.patrakosh.controller.SignupController"
+           style="-fx-background-color: #F5EFE6;">
+    
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: #F5EFE6; -fx-background-color: #F5EFE6;" hbarPolicy="NEVER">
+            <VBox alignment="CENTER" spacing="30" style="-fx-background-color: #F5EFE6;">
+                <padding>
+                    <Insets top="40" right="40" bottom="40" left="40"/>
+                </padding>
+                
+                <!-- Card Container -->
+                <VBox alignment="CENTER" spacing="20" maxWidth="450"
+                  style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+                <padding>
+                    <Insets top="40" right="50" bottom="40" left="50"/>
+                </padding>
+                
+                <!-- Logo/Icon -->
+                <!-- ICON: Uncomment below to use custom logo icon -->
+                <!-- <ImageView fitWidth="80" fitHeight="80" preserveRatio="true">
+                    <image>
+                        <Image url="@../icons/logo.png"/>
+                    </image>
+                </ImageView> -->
+                <!-- Default emoji icon (remove when using custom icon) -->
+                <Label text="📦" style="-fx-font-size: 56px;"/>
+                
+                <!-- Title -->
+                <Label text="Create Account" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #192A51;"/>
+                
+                <Label text="Join PatraKosh today" style="-fx-font-size: 15px; -fx-text-fill: #757575;"/>
+            
+                <!-- Username Field -->
+                <VBox spacing="8">
+                    <Label text="Username" style="-fx-font-size: 14px; -fx-text-fill: #424242;"/>
+                    <TextField fx:id="usernameField" promptText="Choose a username"
+                              style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #E0E0E0; -fx-border-width: 1; -fx-padding: 14; -fx-font-size: 15px;"
+                              prefWidth="350"/>
+                <Label fx:id="usernameError" style="-fx-text-fill: #F44336; -fx-font-size: 11px;" visible="false"/>
+            </VBox>
+            
+                <!-- Email Field -->
+                <VBox spacing="8">
+                    <Label text="Email" style="-fx-font-size: 14px; -fx-text-fill: #424242;"/>
+                    <TextField fx:id="emailField" promptText="Enter your email"
+                              style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #E0E0E0; -fx-border-width: 1; -fx-padding: 14; -fx-font-size: 15px;"
+                              prefWidth="350"/>
+                <Label fx:id="emailError" style="-fx-text-fill: #F44336; -fx-font-size: 11px;" visible="false"/>
+            </VBox>
+            
+                <!-- Password Field -->
+                <VBox spacing="8">
+                    <Label text="Password" style="-fx-font-size: 14px; -fx-text-fill: #424242;"/>
+                    <PasswordField fx:id="passwordField" promptText="Create a password (min 6 characters)"
+                                  style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #E0E0E0; -fx-border-width: 1; -fx-padding: 14; -fx-font-size: 15px;"
+                                  prefWidth="350"/>
+                <Label fx:id="passwordError" style="-fx-text-fill: #F44336; -fx-font-size: 11px;" visible="false"/>
+            </VBox>
+            
+                <!-- Confirm Password Field -->
+                <VBox spacing="8">
+                    <Label text="Confirm Password" style="-fx-font-size: 14px; -fx-text-fill: #424242;"/>
+                    <PasswordField fx:id="confirmPasswordField" promptText="Re-enter password"
+                                  style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #E0E0E0; -fx-border-width: 1; -fx-padding: 14; -fx-font-size: 15px;"
+                                  prefWidth="350"/>
+                <Label fx:id="confirmPasswordError" style="-fx-text-fill: #F44336; -fx-font-size: 11px;" visible="false"/>
+            </VBox>
+            
+            <!-- Error Label -->
+            <Label fx:id="errorLabel" style="-fx-text-fill: #F44336; -fx-font-size: 12px;" wrapText="true" visible="false"/>
+            
+            <!-- Success Label -->
+            <Label fx:id="successLabel" style="-fx-text-fill: #4CAF50; -fx-font-size: 12px;" wrapText="true" visible="false"/>
+            
+                <!-- Signup Button -->
+                <Button fx:id="signupButton" text="Sign Up" onAction="#handleSignup" defaultButton="true"
+                       style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 14 20;"
+                       prefWidth="350" prefHeight="50">
+                </Button>
+                
+                <!-- Login Link -->
+                <HBox alignment="CENTER" spacing="5">
+                    <Label text="Already have an account?" style="-fx-font-size: 14px; -fx-text-fill: #757575;"/>
+                    <Hyperlink fx:id="loginLink" text="Login" onAction="#handleLoginLink"
+                              style="-fx-font-size: 14px; -fx-text-fill: #192A51; -fx-underline: true; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
