@@ -326,6 +326,13 @@ This project is created for educational purposes.
 
 **TeamAlgoNauts**
 
+### Project Lead & Developer
+**Abhay Pratap Singh**
+- � Emaipl: [pratapsinghabhay0208@gmail.com](mailto:pratapsinghabhay0208@gmail.com)
+- 📱 Instagram: [@capto.82](https://instagram.com/capto.82)
+- 💻 GitHub: [@abhaypratap08](https://github.com/abhaypratap08)
+
+
 ---
 
 ## 📞 Support
