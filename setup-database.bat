@@ -50,25 +50,14 @@ if not errorlevel 1 (
     )
 )
 
-:: MySQL not found - offer to install
+:: MySQL not found - install automatically
 echo [WARNING] MySQL not found!
 echo.
-echo Would you like to download and install MySQL automatically?
-echo This will download MySQL 8.0 Community Server (~400MB)
-echo.
-set /p install_mysql="Install MySQL automatically? (y/n): "
-
-if /i "%install_mysql%"=="y" goto install_mysql
-if /i "%install_mysql%"=="yes" goto install_mysql
-
-echo.
-echo Please install MySQL manually:
-echo Download from: https://dev.mysql.com/downloads/mysql/
-echo.
-echo After installation, run this script again.
+echo MySQL is required for PatraKosh to work.
+echo Installing MySQL 8.0 Community Server automatically...
+echo This will download ~400MB and may take 10-15 minutes.
 echo.
 pause
-exit /b 1
 
 :install_mysql
 echo.
@@ -146,11 +135,14 @@ echo ==========================================
 echo.
 echo MySQL Server 8.0 has been installed.
 echo.
-echo IMPORTANT: You need to restart this script
-echo to continue with database setup.
+echo Continuing with database setup...
 echo.
-pause
-exit /b 0
+timeout /t 3 >nul
+
+:: Set MySQL path and continue
+set "MYSQL_PATH=C:\Program Files\MySQL\MySQL Server 8.0\bin"
+set "MYSQL_VERSION=8.0"
+goto mysql_found
 
 :mysql_found
 echo MySQL Location: %MYSQL_PATH%
