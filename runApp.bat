@@ -38,25 +38,134 @@ echo    STARTING PATRAKOSH APPLICATION
 echo ==========================================
 echo.
 
-:: Quick checks
-echo Checking prerequisites...
+:: Check Java
+echo [1/3] Checking Java...
 where java >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Java not found!
+    echo [WARNING] Java not found!
+    echo.
+    set /p install_java="Install Java 21 automatically? (y/n): "
+    if /i "!install_java!"=="y" goto install_java
+    if /i "!install_java!"=="yes" goto install_java
+    echo.
     echo Please install Java 17+ from: https://adoptium.net/
     pause
     goto main_menu
 )
 echo [OK] Java found
 
+:check_maven
+echo [2/3] Checking Maven...
 where mvn >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Maven not found!
+    echo [WARNING] Maven not found!
+    echo.
+    set /p install_maven="Install Maven 3.9 automatically? (y/n): "
+    if /i "!install_maven!"=="y" goto install_maven
+    if /i "!install_maven!"=="yes" goto install_maven
+    echo.
     echo Please install Maven from: https://maven.apache.org/download.cgi
     pause
     goto main_menu
 )
 echo [OK] Maven found
+goto check_project
+
+:install_java
+echo.
+echo ==========================================
+echo    Installing Java 21 (Eclipse Temurin)
+echo ==========================================
+echo.
+echo Downloading Java 21 (~200MB)...
+echo This may take 5-10 minutes...
+echo.
+
+if not exist "%TEMP%\PatraKosh-Setup" mkdir "%TEMP%\PatraKosh-Setup"
+
+powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Write-Host 'Downloading Java 21...'; Invoke-WebRequest -Uri 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.1+12/OpenJDK21U-jdk_x64_windows_hotspot_21.0.1_12.msi' -OutFile '%TEMP%\PatraKosh-Setup\java21.msi' -UseBasicParsing } catch { Write-Host 'Download failed: ' $_.Exception.Message; exit 1 }}"
+
+if not exist "%TEMP%\PatraKosh-Setup\java21.msi" (
+    echo [ERROR] Failed to download Java
+    echo Please install manually from: https://adoptium.net/
+    pause
+    goto main_menu
+)
+
+echo [OK] Java downloaded
+echo.
+echo Installing Java 21...
+echo Please wait, this may take a few minutes...
+start /wait msiexec /i "%TEMP%\PatraKosh-Setup\java21.msi" /quiet /norestart ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome
+
+:: Clean up
+del "%TEMP%\PatraKosh-Setup\java21.msi" >nul 2>&1
+
+:: Refresh environment
+echo.
+echo [OK] Java 21 installed!
+echo.
+echo IMPORTANT: Please restart this script for changes to take effect.
+echo.
+pause
+exit /b 0
+
+:install_maven
+echo.
+echo ==========================================
+echo    Installing Maven 3.9.6
+echo ==========================================
+echo.
+echo Downloading Maven (~10MB)...
+echo.
+
+if not exist "%TEMP%\PatraKosh-Setup" mkdir "%TEMP%\PatraKosh-Setup"
+
+powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Write-Host 'Downloading Maven...'; Invoke-WebRequest -Uri 'https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip' -OutFile '%TEMP%\PatraKosh-Setup\maven.zip' -UseBasicParsing } catch { Write-Host 'Download failed: ' $_.Exception.Message; exit 1 }}"
+
+if not exist "%TEMP%\PatraKosh-Setup\maven.zip" (
+    echo [ERROR] Failed to download Maven
+    echo Please install manually from: https://maven.apache.org/download.cgi
+    pause
+    goto main_menu
+)
+
+echo [OK] Maven downloaded
+echo.
+echo Installing Maven...
+
+:: Extract Maven
+powershell -Command "Expand-Archive -Path '%TEMP%\PatraKosh-Setup\maven.zip' -DestinationPath 'C:\Tools\' -Force"
+
+if exist "C:\Tools\apache-maven-3.9.6" (
+    :: Add to PATH
+    setx PATH "%PATH%;C:\Tools\apache-maven-3.9.6\bin" /M >nul 2>&1
+    setx MAVEN_HOME "C:\Tools\apache-maven-3.9.6" /M >nul 2>&1
+    
+    :: Update current session
+    set "PATH=%PATH%;C:\Tools\apache-maven-3.9.6\bin"
+    set "MAVEN_HOME=C:\Tools\apache-maven-3.9.6"
+    
+    echo [OK] Maven installed to C:\Tools\apache-maven-3.9.6
+) else (
+    echo [ERROR] Maven installation failed
+    pause
+    goto main_menu
+)
+
+:: Clean up
+del "%TEMP%\PatraKosh-Setup\maven.zip" >nul 2>&1
+
+echo.
+echo [OK] Maven 3.9.6 installed!
+echo.
+echo IMPORTANT: Please restart this script for changes to take effect.
+echo.
+pause
+exit /b 0
+
+:check_project
+echo [3/3] Checking project files...
 
 if not exist "pom.xml" (
     echo [ERROR] pom.xml not found!
