@@ -19,7 +19,6 @@
 | **QUICK_START.md** | 3-step beginner guide | [View Guide](QUICK_START.md) |
 | **GETTING_STARTED.md** | Detailed installation walkthrough | [View Guide](GETTING_STARTED.md) |
 | **SETUP_CHECKLIST.md** | Step-by-step verification checklist | [View Checklist](SETUP_CHECKLIST.md) |
-| **GITHUB_UPLOAD_GUIDE.md** | Guide for uploading to GitHub | [View Guide](GITHUB_UPLOAD_GUIDE.md) |
 | **PROJECT_SUMMARY.md** | Complete project overview | [View Summary](PROJECT_SUMMARY.md) |
 | **ARCHITECTURE.md** | Technical architecture details | [View Architecture](ARCHITECTURE.md) |
 | **QUICKSTART.md** | 5-minute setup guide | [View Guide](QUICKSTART.md) |
