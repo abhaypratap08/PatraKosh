@@ -1,4 +1,4 @@
-# PatraKosh - VCentralized File Repository System
+# PatraKosh - Centralized File Repository System
 
 **PatraKosh** is a modern, desktop file storage solution inspired by Dropbox, built with **JavaFX** and **MySQL**. Enjoy a beautiful, intuitive interface for uploading, downloading, searching, and securely managing your files.
 
