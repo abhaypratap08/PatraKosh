@@ -1,310 +1,247 @@
 @echo off
-title PatraKosh - File Storage Application Launcher
+title PatraKosh - One-Click Installer and Launcher
 color 0A
 setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
-:main_menu
 cls
 echo.
 echo ==========================================
-echo    PatraKosh - File Storage Application
-echo    TeamAlgoNauts Project - v1.0.0
+echo    PatraKosh - One-Click Setup
 echo ==========================================
 echo.
-echo Choose an option:
+echo This will automatically:
+echo  - Install Java 21 (if needed)
+echo  - Install Maven 3.9 (if needed)
+echo  - Install MySQL 8.0 (if needed)
+echo  - Setup database
+echo  - Launch PatraKosh
 echo.
-echo 1. START APPLICATION (Recommended)
-echo 2. VERIFY SYSTEM SETUP
-echo 3. MANUAL DATABASE SETUP GUIDE
-echo 4. EXIT
+echo First-time setup may take 15-20 minutes.
+echo Please be patient!
 echo.
-set /p choice="Enter your choice (1-4): "
+pause
 
-if "%choice%"=="1" goto start_app
-if "%choice%"=="2" goto verify_setup
-if "%choice%"=="3" goto database_guide
-if "%choice%"=="4" goto exit_app
-echo Invalid choice. Please try again.
-timeout /t 2 >nul
-goto main_menu
+:: Create tools directory
+if not exist "tools" mkdir "tools"
+if not exist "%TEMP%\PatraKosh-Setup" mkdir "%TEMP%\PatraKosh-Setup"
 
-:start_app
-cls
+:: ============================================
+:: STEP 1: Install Java
+:: ============================================
 echo.
 echo ==========================================
-echo    STARTING PATRAKOSH APPLICATION
+echo [1/5] Setting up Java 21...
 echo ==========================================
 echo.
 
-:: Check Java
-echo [1/3] Checking Java...
 where java >nul 2>&1
-if errorlevel 1 (
-    echo [WARNING] Java not found!
-    echo.
-    set /p install_java="Install Java 21 automatically? (y/n): "
-    if /i "!install_java!"=="y" goto install_java
-    if /i "!install_java!"=="yes" goto install_java
-    echo.
-    echo Please install Java 17+ from: https://adoptium.net/
-    pause
-    goto main_menu
+if not errorlevel 1 (
+    echo [OK] Java already installed
+    goto setup_maven
 )
-echo [OK] Java found
 
-:check_maven
-echo [2/3] Checking Maven...
-where mvn >nul 2>&1
-if errorlevel 1 (
-    echo [WARNING] Maven not found!
-    echo.
-    set /p install_maven="Install Maven 3.9 automatically? (y/n): "
-    if /i "!install_maven!"=="y" goto install_maven
-    if /i "!install_maven!"=="yes" goto install_maven
-    echo.
-    echo Please install Maven from: https://maven.apache.org/download.cgi
-    pause
-    goto main_menu
+:: Check if already installed locally
+if exist "tools\java\bin\java.exe" (
+    set "PATH=%CD%\tools\java\bin;!PATH!"
+    set "JAVA_HOME=%CD%\tools\java"
+    echo [OK] Using local Java installation
+    goto setup_maven
 )
-echo [OK] Maven found
-goto check_project
 
-:install_java
-echo.
-echo ==========================================
-echo    Installing Java 21 (Eclipse Temurin)
-echo ==========================================
-echo.
 echo Downloading Java 21 (~200MB)...
-echo This may take 5-10 minutes...
-echo.
+powershell -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.1+12/OpenJDK21U-jdk_x64_windows_hotspot_21.0.1_12.zip' -OutFile '%TEMP%\PatraKosh-Setup\java.zip'"
 
-if not exist "%TEMP%\PatraKosh-Setup" mkdir "%TEMP%\PatraKosh-Setup"
-
-powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Write-Host 'Downloading Java 21...'; Invoke-WebRequest -Uri 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.1+12/OpenJDK21U-jdk_x64_windows_hotspot_21.0.1_12.msi' -OutFile '%TEMP%\PatraKosh-Setup\java21.msi' -UseBasicParsing } catch { Write-Host 'Download failed: ' $_.Exception.Message; exit 1 }}"
-
-if not exist "%TEMP%\PatraKosh-Setup\java21.msi" (
-    echo [ERROR] Failed to download Java
-    echo Please install manually from: https://adoptium.net/
-    pause
-    goto main_menu
+if exist "%TEMP%\PatraKosh-Setup\java.zip" (
+    echo Extracting Java...
+    powershell -Command "Expand-Archive -Path '%TEMP%\PatraKosh-Setup\java.zip' -DestinationPath 'tools\' -Force"
+    
+    :: Find the extracted folder
+    for /d %%i in ("tools\jdk-21*") do (
+        ren "%%i" "java"
+        set "PATH=%CD%\tools\java\bin;!PATH!"
+        set "JAVA_HOME=%CD%\tools\java"
+        echo [OK] Java 21 installed locally
+        goto setup_maven
+    )
 )
 
-echo [OK] Java downloaded
-echo.
-echo Installing Java 21...
-echo Please wait, this may take a few minutes...
-start /wait msiexec /i "%TEMP%\PatraKosh-Setup\java21.msi" /quiet /norestart ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome
-
-:: Clean up
-del "%TEMP%\PatraKosh-Setup\java21.msi" >nul 2>&1
-
-:: Refresh environment
-echo.
-echo [OK] Java 21 installed!
-echo.
-echo IMPORTANT: Please restart this script for changes to take effect.
-echo.
+echo [ERROR] Java installation failed
+echo Please install Java manually from: https://adoptium.net/
 pause
-exit /b 0
+exit /b 1
 
-:install_maven
+:: ============================================
+:: STEP 2: Install Maven
+:: ============================================
+:setup_maven
 echo.
 echo ==========================================
-echo    Installing Maven 3.9.6
+echo [2/5] Setting up Maven 3.9...
 echo ==========================================
 echo.
-echo Downloading Maven (~10MB)...
-echo.
 
-if not exist "%TEMP%\PatraKosh-Setup" mkdir "%TEMP%\PatraKosh-Setup"
-
-powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Write-Host 'Downloading Maven...'; Invoke-WebRequest -Uri 'https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip' -OutFile '%TEMP%\PatraKosh-Setup\maven.zip' -UseBasicParsing } catch { Write-Host 'Download failed: ' $_.Exception.Message; exit 1 }}"
-
-if not exist "%TEMP%\PatraKosh-Setup\maven.zip" (
-    echo [ERROR] Failed to download Maven
-    echo Please install manually from: https://maven.apache.org/download.cgi
-    pause
-    goto main_menu
+where mvn >nul 2>&1
+if not errorlevel 1 (
+    echo [OK] Maven already installed
+    goto setup_mysql
 )
 
-echo [OK] Maven downloaded
-echo.
-echo Installing Maven...
-
-:: Extract Maven
-powershell -Command "Expand-Archive -Path '%TEMP%\PatraKosh-Setup\maven.zip' -DestinationPath 'C:\Tools\' -Force"
-
-if exist "C:\Tools\apache-maven-3.9.6" (
-    :: Add to PATH
-    setx PATH "%PATH%;C:\Tools\apache-maven-3.9.6\bin" /M >nul 2>&1
-    setx MAVEN_HOME "C:\Tools\apache-maven-3.9.6" /M >nul 2>&1
-    
-    :: Update current session
-    set "PATH=%PATH%;C:\Tools\apache-maven-3.9.6\bin"
-    set "MAVEN_HOME=C:\Tools\apache-maven-3.9.6"
-    
-    echo [OK] Maven installed to C:\Tools\apache-maven-3.9.6
-) else (
-    echo [ERROR] Maven installation failed
-    pause
-    goto main_menu
+:: Check if already installed locally
+if exist "tools\maven\bin\mvn.cmd" (
+    set "PATH=%CD%\tools\maven\bin;!PATH!"
+    set "MAVEN_HOME=%CD%\tools\maven"
+    echo [OK] Using local Maven installation
+    goto setup_mysql
 )
 
-:: Clean up
-del "%TEMP%\PatraKosh-Setup\maven.zip" >nul 2>&1
+echo Downloading Maven 3.9.6 (~10MB)...
+powershell -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip' -OutFile '%TEMP%\PatraKosh-Setup\maven.zip'"
 
-echo.
-echo [OK] Maven 3.9.6 installed!
-echo.
-echo IMPORTANT: Please restart this script for changes to take effect.
-echo.
+if exist "%TEMP%\PatraKosh-Setup\maven.zip" (
+    echo Extracting Maven...
+    powershell -Command "Expand-Archive -Path '%TEMP%\PatraKosh-Setup\maven.zip' -DestinationPath 'tools\' -Force"
+    
+    if exist "tools\apache-maven-3.9.6" (
+        ren "tools\apache-maven-3.9.6" "maven"
+        set "PATH=%CD%\tools\maven\bin;!PATH!"
+        set "MAVEN_HOME=%CD%\tools\maven"
+        echo [OK] Maven 3.9.6 installed locally
+        goto setup_mysql
+    )
+)
+
+echo [ERROR] Maven installation failed
+echo Please install Maven manually from: https://maven.apache.org/download.cgi
 pause
-exit /b 0
+exit /b 1
 
-:check_project
-echo [3/3] Checking project files...
+:: ============================================
+:: STEP 3: Install MySQL
+:: ============================================
+:setup_mysql
+echo.
+echo ==========================================
+echo [3/5] Setting up MySQL 8.0...
+echo ==========================================
+echo.
 
-if not exist "pom.xml" (
-    echo [ERROR] pom.xml not found!
-    pause
-    goto main_menu
+:: Check for MySQL
+where mysql >nul 2>&1
+if not errorlevel 1 (
+    echo [OK] MySQL already installed
+    goto setup_database
 )
-echo [OK] Project files found
+
+if exist "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" (
+    set "PATH=C:\Program Files\MySQL\MySQL Server 8.0\bin;!PATH!"
+    echo [OK] MySQL Server 8.0 found
+    goto setup_database
+)
+
+if exist "C:\Program Files\MySQL\MySQL Server 9.0\bin\mysql.exe" (
+    set "PATH=C:\Program Files\MySQL\MySQL Server 9.0\bin;!PATH!"
+    echo [OK] MySQL Server 9.0 found
+    goto setup_database
+)
+
+echo MySQL not found - installing...
+echo Downloading MySQL Installer (~2MB)...
+powershell -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-installer-community-8.0.40.0.msi' -OutFile '%TEMP%\PatraKosh-Setup\mysql-installer.msi'"
+
+if exist "%TEMP%\PatraKosh-Setup\mysql-installer.msi" (
+    echo.
+    echo Installing MySQL Server...
+    echo IMPORTANT: When the installer opens:
+    echo  1. Choose "Server Only"
+    echo  2. Set a root password (remember it!)
+    echo  3. Keep default settings
+    echo.
+    echo Press any key to start MySQL installation...
+    pause >nul
+    
+    start /wait msiexec /i "%TEMP%\PatraKosh-Setup\mysql-installer.msi" /qb
+    
+    timeout /t 5 >nul
+    net start MySQL80 >nul 2>&1
+    
+    if exist "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" (
+        set "PATH=C:\Program Files\MySQL\MySQL Server 8.0\bin;!PATH!"
+        echo [OK] MySQL installed successfully
+        goto setup_database
+    )
+)
+
+echo [WARNING] MySQL installation incomplete
+echo You may need to install MySQL manually
+echo Continuing anyway...
+
+:: ============================================
+:: STEP 4: Setup Database
+:: ============================================
+:setup_database
+echo.
+echo ==========================================
+echo [4/5] Creating database...
+echo ==========================================
+echo.
+
+set /p MYSQL_PASSWORD="Enter your MySQL root password (or press Enter if none): "
+
+if "%MYSQL_PASSWORD%"=="" (
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS patrakosh_db;" 2>nul
+    if not errorlevel 1 (
+        echo [OK] Database created
+        mysql -u root patrakosh_db < database_setup.sql 2>nul
+        echo [OK] Tables created
+        
+        :: Update config
+        powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=' | Set-Content 'src\main\resources\application.properties'"
+        goto build_app
+    )
+)
+
+mysql -u root -p%MYSQL_PASSWORD% -e "CREATE DATABASE IF NOT EXISTS patrakosh_db;" 2>nul
+if not errorlevel 1 (
+    echo [OK] Database created
+    mysql -u root -p%MYSQL_PASSWORD% patrakosh_db < database_setup.sql 2>nul
+    echo [OK] Tables created
+    
+    :: Update config
+    powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=%MYSQL_PASSWORD%' | Set-Content 'src\main\resources\application.properties'"
+    goto build_app
+)
+
+echo [WARNING] Database setup had issues
+echo You may need to run setup-database.bat manually
+echo Continuing anyway...
+
+:: ============================================
+:: STEP 5: Build and Launch
+:: ============================================
+:build_app
+echo.
+echo ==========================================
+echo [5/5] Building and launching PatraKosh...
+echo ==========================================
+echo.
 
 if not exist "storage" mkdir "storage"
 
-echo.
-echo ==========================================
-echo    Building and Starting PatraKosh...
-echo    This may take 5-10 minutes first time
-echo    JavaFX window will open shortly...
-echo ==========================================
+echo This may take 5-10 minutes on first run...
+echo Downloading dependencies and compiling...
 echo.
 
-:: Run Maven with JavaFX
-mvn clean javafx:run
+call mvn clean javafx:run
 
 echo.
 echo ==========================================
-echo    PatraKosh Session Ended
+echo    PatraKosh Session Complete
 echo ==========================================
 echo.
-set /p restart="Return to menu? (y/n): "
-if /i "%restart%"=="y" goto main_menu
-goto exit_app
-
-:database_guide
-cls
-echo.
-echo ==========================================
-echo    DATABASE SETUP GUIDE
-echo ==========================================
-echo.
-echo Manual Database Setup Steps:
-echo.
-echo 1. Install MySQL Server
-echo    Download: https://dev.mysql.com/downloads/mysql/
-echo.
-echo 2. Start MySQL Service
-echo    Run: net start mysql
-echo.
-echo 3. Create Database
-echo    Run: mysql -u root -p ^< database_setup.sql
-echo.
-echo 4. Configure Application
-echo    Edit: src\main\resources\application.properties
-echo    Replace YOUR_MYSQL_PASSWORD_HERE with your password
-echo.
-pause
-goto main_menu
-
-:verify_setup
-cls
-echo.
-echo ==========================================
-echo    System Verification
-echo ==========================================
-echo.
-
-echo Checking Java...
-where java >nul 2>&1
-if errorlevel 1 (
-    echo [!] Java NOT found
-    echo Install from: https://adoptium.net/
-) else (
-    echo [OK] Java is installed
-)
-
-echo.
-echo Checking Maven...
-where mvn >nul 2>&1
-if errorlevel 1 (
-    echo [!] Maven NOT found
-    echo Install from: https://maven.apache.org/download.cgi
-) else (
-    echo [OK] Maven is installed
-)
-
-echo.
-echo Checking Project Files...
-if not exist "pom.xml" (
-    echo [!] pom.xml NOT found
-) else (
-    echo [OK] pom.xml found
-)
-
-if not exist "src\main\java" (
-    echo [!] Source code NOT found
-) else (
-    echo [OK] Source code found
-)
-
-echo.
-echo Checking MySQL...
-where mysql >nul 2>&1
-if errorlevel 1 (
-    echo [!] MySQL NOT found in PATH
-    echo Install from: https://dev.mysql.com/downloads/mysql/
-) else (
-    echo [OK] MySQL found
-)
-
-echo.
-echo Checking Database Config...
-if exist "src\main\resources\application.properties" (
-    findstr /C:"YOUR_MYSQL_PASSWORD_HERE" "src\main\resources\application.properties" >nul 2>&1
-    if not errorlevel 1 (
-        echo [!] Database password NOT configured
-        echo Edit: src\main\resources\application.properties
-    ) else (
-        echo [OK] Database config looks good
-    )
-) else (
-    echo [!] application.properties NOT found
-)
-
-echo.
-echo ==========================================
-echo    Verification Complete
-echo ==========================================
-echo.
-pause
-goto main_menu
-
-:exit_app
-cls
-echo.
-echo ==========================================
-echo    Thank you for using PatraKosh!
-echo ==========================================
-echo.
-echo Your files are stored in: storage\
-echo Run this script anytime to access PatraKosh
-echo.
-echo Built by TeamAlgoNauts
+echo Next time, just run this script again!
+echo All dependencies are now installed.
 echo.
 pause
 exit /b 0
