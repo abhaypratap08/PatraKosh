@@ -5,7 +5,10 @@ setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
-
+:: ============================================
+:: PATRAKOSH ONE-CLICK LAUNCHER
+:: Fully automated setup, build, and launch
+:: ============================================
 
 :: Initialize logging
 call :InitLog
@@ -499,50 +502,44 @@ if defined CONFIG_MYSQL_HOME (
 call :Log "Using MySQL command: %MYSQL_CMD%"
 
 if defined CONFIG_MYSQL_PASSWORD (
-    call :Log "Trying with saved password..."
-    "%MYSQL_CMD%" -u root -p!CONFIG_MYSQL_PASSWORD! -e "SHOW DATABASES;" >"%TEMP%\mysql_test.txt" 2>&1
-    findstr /C:"ERROR" "%TEMP%\mysql_test.txt" >nul 2>&1
-    if errorlevel 1 (
-        call :Log "Connected with saved password"
-        echo   [OK] Connected to MySQL
-        del "%TEMP%\mysql_test.txt" 2>nul
-        exit /b 0
+    if not "!CONFIG_MYSQL_PASSWORD!"=="" (
+        call :Log "Trying with saved password..."
+        "%MYSQL_CMD%" -u root -p!CONFIG_MYSQL_PASSWORD! -e "SHOW DATABASES;" >nul 2>&1
+        set "CONN_RESULT=!ERRORLEVEL!"
+        if !CONN_RESULT! equ 0 (
+            call :Log "Connected with saved password"
+            echo   [OK] Connected to MySQL
+            exit /b 0
+        )
     )
 )
 
 call :Log "Trying without password..."
-"%MYSQL_CMD%" -u root -e "SHOW DATABASES;" >"%TEMP%\mysql_test.txt" 2>&1
-findstr /C:"ERROR" "%TEMP%\mysql_test.txt" >nul 2>&1
-if errorlevel 1 (
-    set "CONFIG_MYSQL_PASSWORD="
-    call :SaveConfig MYSQL_PASSWORD ""
-    call :Log "Connected without password"
-    echo   [OK] Connected to MySQL (no password)
-    del "%TEMP%\mysql_test.txt" 2>nul
-    exit /b 0
-)
+"%MYSQL_CMD%" -u root -e "SHOW DATABASES;" >nul 2>&1
+if errorlevel 1 goto :ConnectWithPassword
+set "CONFIG_MYSQL_PASSWORD="
+call :SaveConfig MYSQL_PASSWORD ""
+call :Log "Connected without password"
+echo   [OK] Connected to MySQL (no password)
+exit /b 0
 
-call :Log "Prompting user for password..."
-del "%TEMP%\mysql_test.txt" 2>nul
-
+:ConnectWithPassword
+call :Log "Connection without password failed, prompting user..."
 echo.
 echo   MySQL requires authentication.
 set /p "MYSQL_PASSWORD=  Enter MySQL root password: "
 
 call :Log "User entered password, trying with password..."
-"%MYSQL_CMD%" -u root -p%MYSQL_PASSWORD% -e "SHOW DATABASES;" >"%TEMP%\mysql_test.txt" 2>&1
-findstr /C:"ERROR" "%TEMP%\mysql_test.txt" >nul 2>&1
-if errorlevel 1 (
-    call :SaveConfig MYSQL_PASSWORD "%MYSQL_PASSWORD%"
-    set "CONFIG_MYSQL_PASSWORD=%MYSQL_PASSWORD%"
-    call :Log "Connected with password (saved for future)"
-    echo   [OK] Connected to MySQL (password saved)
-    del "%TEMP%\mysql_test.txt" 2>nul
-    exit /b 0
-)
+"%MYSQL_CMD%" -u root -p%MYSQL_PASSWORD% -e "SHOW DATABASES;" >nul 2>&1
+if errorlevel 1 goto :ConnectFailed
+call :SaveConfig MYSQL_PASSWORD "%MYSQL_PASSWORD%"
+set "CONFIG_MYSQL_PASSWORD=%MYSQL_PASSWORD%"
+call :Log "Connected with password (saved for future)"
+echo   [OK] Connected to MySQL (password saved)
+exit /b 0
 
+:ConnectFailed
 call :LogError "Password authentication failed"
-del "%TEMP%\mysql_test.txt" 2>nul
 echo   [ERROR] Could not connect to MySQL
 exit /b 1
 
@@ -556,11 +553,11 @@ if defined CONFIG_MYSQL_HOME (
 )
 
 if defined CONFIG_MYSQL_PASSWORD (
-    if "%CONFIG_MYSQL_PASSWORD%"=="" (
-        "%MYSQL_CMD%" -u root -e "CREATE DATABASE IF NOT EXISTS patrakosh_db;" 2>nul
+    if not "!CONFIG_MYSQL_PASSWORD!"=="" (
+        "%MYSQL_CMD%" -u root -p!CONFIG_MYSQL_PASSWORD! -e "CREATE DATABASE IF NOT EXISTS patrakosh_db;" 2>nul
         set "DB_RESULT=!ERRORLEVEL!"
     ) else (
-        "%MYSQL_CMD%" -u root -p%CONFIG_MYSQL_PASSWORD% -e "CREATE DATABASE IF NOT EXISTS patrakosh_db;" 2>nul
+        "%MYSQL_CMD%" -u root -e "CREATE DATABASE IF NOT EXISTS patrakosh_db;" 2>nul
         set "DB_RESULT=!ERRORLEVEL!"
     )
 ) else (
@@ -598,10 +595,10 @@ if exist "database_schema.sql" (
 )
 
 if defined CONFIG_MYSQL_PASSWORD (
-    if "%CONFIG_MYSQL_PASSWORD%"=="" (
-        "%MYSQL_CMD%" -u root patrakosh_db < "%SQL_FILE%" 2>nul
+    if not "!CONFIG_MYSQL_PASSWORD!"=="" (
+        "%MYSQL_CMD%" -u root -p!CONFIG_MYSQL_PASSWORD! patrakosh_db < "%SQL_FILE%" 2>nul
     ) else (
-        "%MYSQL_CMD%" -u root -p%CONFIG_MYSQL_PASSWORD% patrakosh_db < "%SQL_FILE%" 2>nul
+        "%MYSQL_CMD%" -u root patrakosh_db < "%SQL_FILE%" 2>nul
     )
 ) else (
     "%MYSQL_CMD%" -u root patrakosh_db < "%SQL_FILE%" 2>nul
@@ -622,10 +619,10 @@ if not exist "src\main\resources\application.properties" (
 )
 
 if defined CONFIG_MYSQL_PASSWORD (
-    if "%CONFIG_MYSQL_PASSWORD%"=="" (
-        powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=' | Set-Content 'src\main\resources\application.properties'"
+    if not "!CONFIG_MYSQL_PASSWORD!"=="" (
+        powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=!CONFIG_MYSQL_PASSWORD!' | Set-Content 'src\main\resources\application.properties'"
     ) else (
-        powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=%CONFIG_MYSQL_PASSWORD%' | Set-Content 'src\main\resources\application.properties'"
+        powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=' | Set-Content 'src\main\resources\application.properties'"
     )
 ) else (
     powershell -Command "(Get-Content 'src\main\resources\application.properties') -replace 'db.password=.*', 'db.password=' | Set-Content 'src\main\resources\application.properties'"
@@ -796,4 +793,3 @@ echo Detailed logs: setup.log
 echo.
 pause
 exit /b 1
-
