@@ -1,25 +1,37 @@
 package com.patrakosh.controller;
 
+import java.io.File;
+import java.util.List;
+import java.util.Optional;
+
 import com.patrakosh.MainApp;
 import com.patrakosh.model.FileItem;
 import com.patrakosh.model.User;
 import com.patrakosh.service.FileService;
 import com.patrakosh.util.FileUtil;
+
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
 
 public class DashboardController {
     
@@ -27,6 +39,9 @@ public class DashboardController {
     @FXML private MenuButton userMenuButton;
     @FXML private MenuItem logoutMenuItem;
     @FXML private Button uploadButton;
+    @FXML private Button downloadButton;
+    @FXML private Button deleteButton;
+    @FXML private Button renameButton;
     @FXML private Button refreshButton;
     @FXML private TextField searchField;
     @FXML private Label totalFilesLabel;
@@ -117,20 +132,51 @@ public class DashboardController {
         
         filesTable.setItems(filesList);
         
-        // Style table rows
+        // Style table rows with proper selection handling
         filesTable.setRowFactory(tv -> {
-            TableRow<FileItem> row = new TableRow<>();
-            row.setStyle("-fx-background-color: white;");
+            TableRow<FileItem> row = new TableRow<>() {
+                @Override
+                protected void updateItem(FileItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    
+                    if (empty || item == null) {
+                        setStyle("");
+                    } else {
+                        // Normal state
+                        if (!isSelected()) {
+                            setStyle("-fx-background-color: white; -fx-text-fill: black;");
+                        } else {
+                            // Selected state - visible colors
+                            setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
+                        }
+                    }
+                }
+            };
+            
+            // Hover effect
             row.setOnMouseEntered(event -> {
-                if (!row.isEmpty()) {
-                    row.setStyle("-fx-background-color: #F5F5F5;");
+                if (!row.isEmpty() && !row.isSelected()) {
+                    row.setStyle("-fx-background-color: #F5F5F5; -fx-text-fill: black;");
                 }
             });
+            
             row.setOnMouseExited(event -> {
-                if (!row.isEmpty()) {
-                    row.setStyle("-fx-background-color: white;");
+                if (!row.isEmpty() && !row.isSelected()) {
+                    row.setStyle("-fx-background-color: white; -fx-text-fill: black;");
                 }
             });
+            
+            // Update style when selection changes
+            row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+                if (!row.isEmpty()) {
+                    if (isNowSelected) {
+                        row.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
+                    } else {
+                        row.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+                    }
+                }
+            });
+            
             return row;
         });
     }
@@ -283,6 +329,76 @@ public class DashboardController {
                 });
             }
         }).start();
+    }
+    
+    @FXML
+    private void handleDownloadSelected() {
+        FileItem selectedFile = filesTable.getSelectionModel().getSelectedItem();
+        
+        if (selectedFile == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a file to download.");
+            return;
+        }
+        
+        handleDownload(selectedFile);
+    }
+    
+    @FXML
+    private void handleDeleteSelected() {
+        FileItem selectedFile = filesTable.getSelectionModel().getSelectedItem();
+        
+        if (selectedFile == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a file to delete.");
+            return;
+        }
+        
+        handleDelete(selectedFile);
+    }
+    
+    @FXML
+    private void handleRenameSelected() {
+        FileItem selectedFile = filesTable.getSelectionModel().getSelectedItem();
+        
+        if (selectedFile == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a file to rename.");
+            return;
+        }
+        
+        TextInputDialog dialog = new TextInputDialog(selectedFile.getFilename());
+        dialog.setTitle("Rename File");
+        dialog.setHeaderText("Rename File");
+        dialog.setContentText("Enter new filename:");
+        
+        Optional<String> result = dialog.showAndWait();
+        
+        result.ifPresent(newFilename -> {
+            if (newFilename.trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Filename cannot be empty.");
+                return;
+            }
+            
+            updateStatus("Renaming file...");
+            
+            new Thread(() -> {
+                try {
+                    // Update filename in database
+                    selectedFile.setFilename(newFilename.trim());
+                    fileService.updateFile(selectedFile);
+                    
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.INFORMATION, "Success", "File renamed successfully!");
+                        loadFiles();
+                        updateStatus("File renamed successfully");
+                    });
+                    
+                } catch (Exception e) {
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to rename file: " + e.getMessage());
+                        updateStatus("Rename failed");
+                    });
+                }
+            }).start();
+        });
     }
     
     @FXML

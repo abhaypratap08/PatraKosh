@@ -80,7 +80,7 @@
                 </Button>
                 
                 <!-- Download Button -->
-                <Button text="⬇ Download" 
+                <Button fx:id="downloadButton" text="⬇ Download" onAction="#handleDownloadSelected"
                        style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
                     <!-- ICON: Uncomment below to use custom download icon -->
                     <!-- <graphic>
@@ -93,7 +93,7 @@
                 </Button>
                 
                 <!-- Delete Button -->
-                <Button text="🗑 Delete" 
+                <Button fx:id="deleteButton" text="🗑 Delete" onAction="#handleDeleteSelected"
                        style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
                     <!-- ICON: Uncomment below to use custom delete icon -->
                     <!-- <graphic>
@@ -106,7 +106,7 @@
                 </Button>
                 
                 <!-- Rename Button -->
-                <Button text="✏ Rename" 
+                <Button fx:id="renameButton" text="✏ Rename" onAction="#handleRenameSelected"
                        style="-fx-background-color: #192A51; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 10 25;">
                     <!-- ICON: Uncomment below to use custom rename icon -->
                     <!-- <graphic>

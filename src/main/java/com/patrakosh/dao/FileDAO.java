@@ -1,12 +1,16 @@
 package com.patrakosh.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.patrakosh.exception.DatabaseException;
 import com.patrakosh.model.FileItem;
 import com.patrakosh.util.DBUtil;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Data Access Object for FileItem entity.
@@ -98,19 +102,24 @@ public class FileDAO extends GenericDAO<FileItem, Integer> {
     public List<FileItem> getFilesByUserId(Integer userId) throws DatabaseException {
         String sql = "SELECT * FROM files WHERE user_id = ? ORDER BY upload_time DESC";
         List<FileItem> files = new ArrayList<>();
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    files.add(mapResultSetToEntity(rs));
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        files.add(mapResultSetToEntity(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error getting files for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return files;
@@ -127,20 +136,25 @@ public class FileDAO extends GenericDAO<FileItem, Integer> {
     public List<FileItem> searchFiles(Integer userId, String searchTerm) throws DatabaseException {
         String sql = "SELECT * FROM files WHERE user_id = ? AND filename LIKE ? ORDER BY upload_time DESC";
         List<FileItem> files = new ArrayList<>();
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setString(2, "%" + searchTerm + "%");
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    files.add(mapResultSetToEntity(rs));
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                stmt.setString(2, "%" + searchTerm + "%");
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        files.add(mapResultSetToEntity(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error searching files for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return files;
@@ -155,19 +169,24 @@ public class FileDAO extends GenericDAO<FileItem, Integer> {
      */
     public long getTotalStorageUsed(Integer userId) throws DatabaseException {
         String sql = "SELECT SUM(file_size) as total FROM files WHERE user_id = ?";
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong("total");
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getLong("total");
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error calculating storage for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return 0;
@@ -182,19 +201,24 @@ public class FileDAO extends GenericDAO<FileItem, Integer> {
      */
     public int getFileCount(Integer userId) throws DatabaseException {
         String sql = "SELECT COUNT(*) as count FROM files WHERE user_id = ?";
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("count");
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("count");
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error counting files for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return 0;
@@ -209,19 +233,24 @@ public class FileDAO extends GenericDAO<FileItem, Integer> {
      */
     public FileItem getFileByHash(String fileHash) throws DatabaseException {
         String sql = "SELECT * FROM files WHERE file_hash = ? LIMIT 1";
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, fileHash);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToEntity(rs);
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setString(1, fileHash);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToEntity(rs);
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error finding file by hash", e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return null;
@@ -238,20 +267,25 @@ public class FileDAO extends GenericDAO<FileItem, Integer> {
     public List<FileItem> getFilesByMimeType(Integer userId, String mimeType) throws DatabaseException {
         String sql = "SELECT * FROM files WHERE user_id = ? AND mime_type = ? ORDER BY upload_time DESC";
         List<FileItem> files = new ArrayList<>();
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setString(2, mimeType);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    files.add(mapResultSetToEntity(rs));
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                stmt.setString(2, mimeType);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        files.add(mapResultSetToEntity(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error getting files by MIME type for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return files;
