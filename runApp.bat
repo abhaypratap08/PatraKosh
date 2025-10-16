@@ -1,5 +1,5 @@
 @echo off
-title PatraKosh - Installer and Launcher
+title PatraKosh - Enhanced One-Click Installer and Launcher
 color 0A
 setlocal enabledelayedexpansion
 
@@ -8,7 +8,7 @@ cd /d "%~dp0"
 cls
 echo.
 echo ==========================================
-echo    PatraKosh v2.0
+echo    PatraKosh v2.0 - Rubric Compliant
 echo ==========================================
 echo.
 echo This will automatically:
@@ -276,7 +276,7 @@ echo Applying database migrations for new features...
 echo.
 
 if "%MYSQL_PASSWORD%"=="" (
-    mysql -u root patrakosh_db < database_migration_rubric.sql 2>nul
+    mysql -u root patrakosh_db < sql_setup_enhanced.sql 2>nul
     if not errorlevel 1 (
         echo [OK] Database migrated successfully
         echo     - Added storage quota fields
@@ -288,7 +288,7 @@ if "%MYSQL_PASSWORD%"=="" (
         echo [INFO] Migration may have already been applied
     )
 ) else (
-    mysql -u root -p%MYSQL_PASSWORD% patrakosh_db < database_migration_rubric.sql 2>nul
+    mysql -u root -p%MYSQL_PASSWORD% patrakosh_db < sql_setup_enhanced.sql 2>nul
     if not errorlevel 1 (
         echo [OK] Database migrated successfully
         echo     - Added storage quota fields
