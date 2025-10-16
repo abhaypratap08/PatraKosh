@@ -8,7 +8,7 @@ cd /d "%~dp0"
 cls
 echo.
 echo ==========================================
-echo    PatraKosh v2.0 - Rubric Compliant
+echo    PatraKosh v2.0
 echo ==========================================
 echo.
 echo This will automatically:
