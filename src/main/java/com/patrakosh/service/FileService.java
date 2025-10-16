@@ -1,12 +1,5 @@
 package com.patrakosh.service;
 
-import com.patrakosh.dao.ActivityLogDAO;
-import com.patrakosh.dao.FileDAO;
-import com.patrakosh.dao.UserDAO;
-import com.patrakosh.exception.*;
-import com.patrakosh.model.FileItem;
-import com.patrakosh.util.Config;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +7,17 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+
+import com.patrakosh.dao.ActivityLogDAO;
+import com.patrakosh.dao.FileDAO;
+import com.patrakosh.dao.UserDAO;
+import com.patrakosh.exception.DatabaseException;
+import com.patrakosh.exception.FileDownloadException;
+import com.patrakosh.exception.FileUploadException;
+import com.patrakosh.exception.StorageException;
+import com.patrakosh.exception.ValidationException;
+import com.patrakosh.model.FileItem;
+import com.patrakosh.util.Config;
 
 /**
  * File service handling file operations (upload, download, delete, search).
@@ -224,6 +228,36 @@ public class FileService extends BaseService {
         } catch (Exception e) {
             logError("deleteFile", e);
             throw new StorageException("Failed to delete file: " + fileId, e);
+        }
+    }
+    
+    /**
+     * Updates a file's metadata (e.g., filename).
+     *
+     * @param fileItem the file item with updated information
+     * @return the updated file item
+     * @throws StorageException if update fails
+     */
+    public FileItem updateFile(FileItem fileItem) throws StorageException {
+        logOperation("updateFile", fileItem.getId(), fileItem.getFilename());
+        
+        try {
+            FileItem updatedFile = fileDAO.update(fileItem);
+            
+            // Log activity
+            try {
+                activityLogDAO.logActivity(fileItem.getUserId(), "RENAME", "FILE", fileItem.getId(), 
+                    "Renamed to: " + fileItem.getFilename());
+            } catch (DatabaseException e) {
+                logger.warn("Failed to log rename activity", e);
+            }
+            
+            logger.info("File updated successfully: {}", fileItem.getId());
+            return updatedFile;
+            
+        } catch (DatabaseException e) {
+            logError("updateFile", e);
+            throw new StorageException("Failed to update file: " + fileItem.getId(), e);
         }
     }
     

@@ -88,19 +88,24 @@ public class UserDAO extends GenericDAO<User, Integer> {
      */
     public User getUserByUsername(String username) throws DatabaseException {
         String sql = "SELECT * FROM users WHERE username = ?";
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, username);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToEntity(rs);
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setString(1, username);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToEntity(rs);
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error finding user by username: " + username, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return null;
@@ -115,19 +120,24 @@ public class UserDAO extends GenericDAO<User, Integer> {
      */
     public User getUserByEmail(String email) throws DatabaseException {
         String sql = "SELECT * FROM users WHERE email = ?";
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, email);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToEntity(rs);
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setString(1, email);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToEntity(rs);
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error finding user by email: " + email, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return null;
@@ -164,16 +174,20 @@ public class UserDAO extends GenericDAO<User, Integer> {
      */
     public void updateStorageUsed(Integer userId, long additionalSize) throws DatabaseException {
         String sql = "UPDATE users SET storage_used = storage_used + ? WHERE id = ?";
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, additionalSize);
-            stmt.setInt(2, userId);
-            stmt.executeUpdate();
-            
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setLong(1, additionalSize);
+                stmt.setInt(2, userId);
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Error updating storage for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
     }
 }

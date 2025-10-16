@@ -1,13 +1,18 @@
 package com.patrakosh.dao;
 
-import com.patrakosh.exception.DatabaseException;
-import com.patrakosh.model.ActivityLog;
-import com.patrakosh.util.DBUtil;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.patrakosh.exception.DatabaseException;
+import com.patrakosh.model.ActivityLog;
+import com.patrakosh.util.DBUtil;
 
 /**
  * Data Access Object for ActivityLog entity.
@@ -101,20 +106,25 @@ public class ActivityLogDAO extends GenericDAO<ActivityLog, Integer> {
     public List<ActivityLog> getLogsByUserId(Integer userId, int limit) throws DatabaseException {
         String sql = "SELECT * FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
         List<ActivityLog> logs = new ArrayList<>();
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setInt(2, limit);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                stmt.setInt(2, limit);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        logs.add(mapResultSetToEntity(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error getting logs for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return logs;
@@ -131,20 +141,25 @@ public class ActivityLogDAO extends GenericDAO<ActivityLog, Integer> {
     public List<ActivityLog> getLogsByAction(Integer userId, String action) throws DatabaseException {
         String sql = "SELECT * FROM activity_logs WHERE user_id = ? AND action = ? ORDER BY created_at DESC";
         List<ActivityLog> logs = new ArrayList<>();
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setString(2, action);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                stmt.setString(2, action);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        logs.add(mapResultSetToEntity(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error getting logs by action for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return logs;
@@ -162,21 +177,26 @@ public class ActivityLogDAO extends GenericDAO<ActivityLog, Integer> {
     public List<ActivityLog> getLogsByDateRange(Integer userId, LocalDateTime startDate, LocalDateTime endDate) throws DatabaseException {
         String sql = "SELECT * FROM activity_logs WHERE user_id = ? AND created_at BETWEEN ? AND ? ORDER BY created_at DESC";
         List<ActivityLog> logs = new ArrayList<>();
+        Connection conn = null;
         
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, userId);
-            stmt.setTimestamp(2, Timestamp.valueOf(startDate));
-            stmt.setTimestamp(3, Timestamp.valueOf(endDate));
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, userId);
+                stmt.setTimestamp(2, Timestamp.valueOf(startDate));
+                stmt.setTimestamp(3, Timestamp.valueOf(endDate));
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        logs.add(mapResultSetToEntity(rs));
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error getting logs by date range for user: " + userId, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
         
         return logs;

@@ -4,31 +4,54 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import com.patrakosh.transaction.TransactionManager;
+
 public class DBUtil {
-    private static Connection connection = null;
     
+    /**
+     * Gets a database connection.
+     * If called within a transaction context, returns the transaction connection.
+     * Otherwise, creates a new connection.
+     *
+     * @return a database connection
+     * @throws SQLException if connection fails
+     */
     public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            try {
-                Class.forName(Config.getDbDriver());
-                connection = DriverManager.getConnection(
-                    Config.getDbUrl(),
-                    Config.getDbUsername(),
-                    Config.getDbPassword()
-                );
-            } catch (ClassNotFoundException e) {
-                throw new SQLException("Database driver not found", e);
-            }
+        // Check if we're in a transaction context
+        Connection transactionConn = TransactionManager.getInstance().getCurrentConnection();
+        if (transactionConn != null) {
+            return transactionConn;
         }
-        return connection;
+        
+        // Otherwise create a new connection
+        try {
+            Class.forName(Config.getDbDriver());
+            return DriverManager.getConnection(
+                Config.getDbUrl(),
+                Config.getDbUsername(),
+                Config.getDbPassword()
+            );
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Database driver not found", e);
+        }
     }
     
-    public static void closeConnection() {
-        if (connection != null) {
+    /**
+     * Closes a connection if it's not part of a transaction.
+     * Transaction connections should not be closed manually.
+     *
+     * @param conn the connection to close
+     */
+    public static void closeConnection(Connection conn) {
+        if (conn != null) {
             try {
-                connection.close();
+                // Only close if not in transaction context
+                Connection transactionConn = TransactionManager.getInstance().getCurrentConnection();
+                if (transactionConn == null || transactionConn != conn) {
+                    conn.close();
+                }
             } catch (SQLException e) {
-                e.printStackTrace();
+                System.err.println("Error closing connection: " + e.getMessage());
             }
         }
     }

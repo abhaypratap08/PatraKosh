@@ -1,12 +1,16 @@
 package com.patrakosh.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.patrakosh.core.Identifiable;
 import com.patrakosh.exception.DatabaseException;
 import com.patrakosh.util.DBUtil;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Abstract generic DAO providing common CRUD operations.
@@ -69,19 +73,23 @@ public abstract class GenericDAO<T extends Identifiable<ID>, ID> {
      */
     public T findById(ID id) throws DatabaseException {
         String sql = "SELECT * FROM " + getTableName() + " WHERE " + getIdColumnName() + " = ?";
+        Connection conn = null;
+        
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setObject(1, id);
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setObject(1, id);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToEntity(rs);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToEntity(rs);
+                    }
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error finding entity by ID: " + id, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
 
         return null;
@@ -96,16 +104,21 @@ public abstract class GenericDAO<T extends Identifiable<ID>, ID> {
     public List<T> findAll() throws DatabaseException {
         String sql = "SELECT * FROM " + getTableName();
         List<T> entities = new ArrayList<>();
+        Connection conn = null;
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
 
-            while (rs.next()) {
-                entities.add(mapResultSetToEntity(rs));
+                while (rs.next()) {
+                    entities.add(mapResultSetToEntity(rs));
+                }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Error finding all entities", e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
 
         return entities;
@@ -120,26 +133,36 @@ public abstract class GenericDAO<T extends Identifiable<ID>, ID> {
      */
     public T save(T entity) throws DatabaseException {
         String sql = getInsertSQL();
+        Connection conn = null;
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            setInsertParameters(stmt, entity);
-            int affectedRows = stmt.executeUpdate();
+                setInsertParameters(stmt, entity);
+                int affectedRows = stmt.executeUpdate();
 
-            if (affectedRows > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        @SuppressWarnings("unchecked")
-                        ID generatedId = (ID) rs.getObject(1);
-                        entity.setId(generatedId);
+                if (affectedRows > 0) {
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            // Get the generated ID and convert to Integer
+                            // MySQL returns BigInteger for auto-increment, so we need to convert
+                            Object idObj = rs.getObject(1);
+                            if (idObj instanceof Number) {
+                                @SuppressWarnings("unchecked")
+                                ID generatedId = (ID) Integer.valueOf(((Number) idObj).intValue());
+                                entity.setId(generatedId);
+                            }
+                        }
                     }
                 }
-            }
 
-            return entity;
+                return entity;
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Error saving entity", e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
     }
 
@@ -152,17 +175,22 @@ public abstract class GenericDAO<T extends Identifiable<ID>, ID> {
      */
     public T update(T entity) throws DatabaseException {
         String sql = getUpdateSQL();
+        Connection conn = null;
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            setUpdateParameters(stmt, entity);
-            stmt.setObject(getUpdateParameterCount() + 1, entity.getId());
-            stmt.executeUpdate();
+                setUpdateParameters(stmt, entity);
+                stmt.setObject(getUpdateParameterCount() + 1, entity.getId());
+                stmt.executeUpdate();
 
-            return entity;
+                return entity;
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Error updating entity", e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
     }
 
@@ -175,16 +203,21 @@ public abstract class GenericDAO<T extends Identifiable<ID>, ID> {
      */
     public boolean delete(ID id) throws DatabaseException {
         String sql = "DELETE FROM " + getTableName() + " WHERE " + getIdColumnName() + " = ?";
+        Connection conn = null;
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            conn = DBUtil.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setObject(1, id);
-            int affectedRows = stmt.executeUpdate();
+                stmt.setObject(1, id);
+                int affectedRows = stmt.executeUpdate();
 
-            return affectedRows > 0;
+                return affectedRows > 0;
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Error deleting entity with ID: " + id, e);
+        } finally {
+            DBUtil.closeConnection(conn);
         }
     }
 
