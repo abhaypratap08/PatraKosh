@@ -34,3 +34,10 @@ Thumbs.db
 # Application properties (may contain sensitive data)
 # Uncomment if you want to ignore local config
 # src/main/resources/application.properties
+
+# One-click installer configuration files
+.patrakosh.config
+.setup_complete
+setup.log
+setup.old.log
+tools/
