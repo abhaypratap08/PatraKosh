@@ -5,10 +5,7 @@ setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
-:: ============================================
-:: PATRAKOSH ONE-CLICK LAUNCHER
-:: Fully automated setup, build, and launch
-:: ============================================
+
 
 :: Initialize logging
 call :InitLog
@@ -799,3 +796,4 @@ echo Detailed logs: setup.log
 echo.
 pause
 exit /b 1
+
