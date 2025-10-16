@@ -1,5 +1,6 @@
 package com.patrakosh.dao;
 
+import com.patrakosh.exception.DatabaseException;
 import com.patrakosh.model.FileItem;
 import com.patrakosh.util.DBUtil;
 
@@ -7,34 +8,94 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileDAO {
-    
-    public FileItem saveFile(FileItem fileItem) throws SQLException {
-        String sql = "INSERT INTO files (user_id, filename, filepath, file_size) VALUES (?, ?, ?, ?)";
-        
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
-            stmt.setInt(1, fileItem.getUserId());
-            stmt.setString(2, fileItem.getFilename());
-            stmt.setString(3, fileItem.getFilepath());
-            stmt.setLong(4, fileItem.getFileSize());
-            
-            int affectedRows = stmt.executeUpdate();
-            
-            if (affectedRows > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        fileItem.setId(rs.getInt(1));
-                    }
-                }
-            }
-            
-            return fileItem;
-        }
+/**
+ * Data Access Object for FileItem entity.
+ * Extends GenericDAO to inherit CRUD operations and adds file-specific queries.
+ */
+public class FileDAO extends GenericDAO<FileItem, Integer> {
+
+    @Override
+    protected String getTableName() {
+        return "files";
     }
-    
-    public List<FileItem> getFilesByUserId(int userId) throws SQLException {
+
+    @Override
+    protected FileItem mapResultSetToEntity(ResultSet rs) throws SQLException {
+        FileItem file = new FileItem();
+        file.setId(rs.getInt("id"));
+        file.setUserId(rs.getInt("user_id"));
+        file.setFilename(rs.getString("filename"));
+        file.setFilepath(rs.getString("filepath"));
+        file.setFileSize(rs.getLong("file_size"));
+        file.setFileHash(rs.getString("file_hash"));
+        file.setMimeType(rs.getString("mime_type"));
+        file.setVersion(rs.getInt("version"));
+        
+        Timestamp uploadTime = rs.getTimestamp("upload_time");
+        if (uploadTime != null) {
+            file.setUploadTime(uploadTime.toLocalDateTime());
+        }
+        
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        if (createdAt != null) {
+            file.setCreatedAt(createdAt.toLocalDateTime());
+        }
+        
+        Timestamp updatedAt = rs.getTimestamp("updated_at");
+        if (updatedAt != null) {
+            file.setUpdatedAt(updatedAt.toLocalDateTime());
+        }
+        
+        return file;
+    }
+
+    @Override
+    protected void setInsertParameters(PreparedStatement stmt, FileItem file) throws SQLException {
+        stmt.setInt(1, file.getUserId());
+        stmt.setString(2, file.getFilename());
+        stmt.setString(3, file.getFilepath());
+        stmt.setLong(4, file.getFileSize());
+        stmt.setString(5, file.getFileHash());
+        stmt.setString(6, file.getMimeType());
+        stmt.setInt(7, file.getVersion());
+    }
+
+    @Override
+    protected void setUpdateParameters(PreparedStatement stmt, FileItem file) throws SQLException {
+        stmt.setInt(1, file.getUserId());
+        stmt.setString(2, file.getFilename());
+        stmt.setString(3, file.getFilepath());
+        stmt.setLong(4, file.getFileSize());
+        stmt.setString(5, file.getFileHash());
+        stmt.setString(6, file.getMimeType());
+        stmt.setInt(7, file.getVersion());
+    }
+
+    @Override
+    protected String getInsertSQL() {
+        return "INSERT INTO files (user_id, filename, filepath, file_size, file_hash, mime_type, version) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    }
+
+    @Override
+    protected String getUpdateSQL() {
+        return "UPDATE files SET user_id = ?, filename = ?, filepath = ?, file_size = ?, file_hash = ?, mime_type = ?, version = ? WHERE id = ?";
+    }
+
+    @Override
+    protected int getUpdateParameterCount() {
+        return 7;
+    }
+
+    // File-specific query methods
+
+    /**
+     * Gets all files for a specific user.
+     *
+     * @param userId the user ID
+     * @return list of files
+     * @throws DatabaseException if the operation fails
+     */
+    public List<FileItem> getFilesByUserId(Integer userId) throws DatabaseException {
         String sql = "SELECT * FROM files WHERE user_id = ? ORDER BY upload_time DESC";
         List<FileItem> files = new ArrayList<>();
         
@@ -45,45 +106,25 @@ public class FileDAO {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    files.add(extractFileFromResultSet(rs));
+                    files.add(mapResultSetToEntity(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error getting files for user: " + userId, e);
         }
         
         return files;
     }
-    
-    public FileItem getFileById(int fileId) throws SQLException {
-        String sql = "SELECT * FROM files WHERE id = ?";
-        
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, fileId);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return extractFileFromResultSet(rs);
-                }
-            }
-        }
-        
-        return null;
-    }
-    
-    public boolean deleteFile(int fileId) throws SQLException {
-        String sql = "DELETE FROM files WHERE id = ?";
-        
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, fileId);
-            
-            return stmt.executeUpdate() > 0;
-        }
-    }
-    
-    public List<FileItem> searchFiles(int userId, String searchTerm) throws SQLException {
+
+    /**
+     * Searches files by filename for a specific user.
+     *
+     * @param userId the user ID
+     * @param searchTerm the search term
+     * @return list of matching files
+     * @throws DatabaseException if the operation fails
+     */
+    public List<FileItem> searchFiles(Integer userId, String searchTerm) throws DatabaseException {
         String sql = "SELECT * FROM files WHERE user_id = ? AND filename LIKE ? ORDER BY upload_time DESC";
         List<FileItem> files = new ArrayList<>();
         
@@ -95,15 +136,24 @@ public class FileDAO {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    files.add(extractFileFromResultSet(rs));
+                    files.add(mapResultSetToEntity(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error searching files for user: " + userId, e);
         }
         
         return files;
     }
-    
-    public long getTotalStorageUsed(int userId) throws SQLException {
+
+    /**
+     * Gets total storage used by a user.
+     *
+     * @param userId the user ID
+     * @return total storage in bytes
+     * @throws DatabaseException if the operation fails
+     */
+    public long getTotalStorageUsed(Integer userId) throws DatabaseException {
         String sql = "SELECT SUM(file_size) as total FROM files WHERE user_id = ?";
         
         try (Connection conn = DBUtil.getConnection();
@@ -116,12 +166,21 @@ public class FileDAO {
                     return rs.getLong("total");
                 }
             }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error calculating storage for user: " + userId, e);
         }
         
         return 0;
     }
-    
-    public int getFileCount(int userId) throws SQLException {
+
+    /**
+     * Gets file count for a user.
+     *
+     * @param userId the user ID
+     * @return number of files
+     * @throws DatabaseException if the operation fails
+     */
+    public int getFileCount(Integer userId) throws DatabaseException {
         String sql = "SELECT COUNT(*) as count FROM files WHERE user_id = ?";
         
         try (Connection conn = DBUtil.getConnection();
@@ -134,24 +193,67 @@ public class FileDAO {
                     return rs.getInt("count");
                 }
             }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error counting files for user: " + userId, e);
         }
         
         return 0;
     }
-    
-    private FileItem extractFileFromResultSet(ResultSet rs) throws SQLException {
-        FileItem file = new FileItem();
-        file.setId(rs.getInt("id"));
-        file.setUserId(rs.getInt("user_id"));
-        file.setFilename(rs.getString("filename"));
-        file.setFilepath(rs.getString("filepath"));
-        file.setFileSize(rs.getLong("file_size"));
+
+    /**
+     * Finds a file by its hash.
+     *
+     * @param fileHash the file hash
+     * @return the file, or null if not found
+     * @throws DatabaseException if the operation fails
+     */
+    public FileItem getFileByHash(String fileHash) throws DatabaseException {
+        String sql = "SELECT * FROM files WHERE file_hash = ? LIMIT 1";
         
-        Timestamp timestamp = rs.getTimestamp("upload_time");
-        if (timestamp != null) {
-            file.setUploadTime(timestamp.toLocalDateTime());
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, fileHash);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToEntity(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error finding file by hash", e);
         }
         
-        return file;
+        return null;
+    }
+
+    /**
+     * Gets files by MIME type for a user.
+     *
+     * @param userId the user ID
+     * @param mimeType the MIME type
+     * @return list of matching files
+     * @throws DatabaseException if the operation fails
+     */
+    public List<FileItem> getFilesByMimeType(Integer userId, String mimeType) throws DatabaseException {
+        String sql = "SELECT * FROM files WHERE user_id = ? AND mime_type = ? ORDER BY upload_time DESC";
+        List<FileItem> files = new ArrayList<>();
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, userId);
+            stmt.setString(2, mimeType);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    files.add(mapResultSetToEntity(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error getting files by MIME type for user: " + userId, e);
+        }
+        
+        return files;
     }
 }
