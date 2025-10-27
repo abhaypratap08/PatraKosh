@@ -45,7 +45,6 @@ chmod +x run_on_linux_macos.sh
 
 | Document | Description | Link |
 |----------|-------------|------|
-| **FINAL_SUMMARY.md** | Complete achievement summary (50/50) | [View](FINAL_SUMMARY.md) |
 | **PROJECT_REVIEW.md** | Comprehensive project review | [View](PROJECT_REVIEW.md) |
 | **FILES_CHANGED.md** | All new/modified files listing | [View](FILES_CHANGED.md) |
 | **DATABASE_SCHEMA.md** | Complete database documentation | [View](DATABASE_SCHEMA.md) |
