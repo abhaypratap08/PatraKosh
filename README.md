@@ -45,7 +45,6 @@ chmod +x run_on_linux_macos.sh
 
 | Document | Description | Link |
 |----------|-------------|------|
-| **FILES_CHANGED.md** | All new/modified files listing | [View](FILES_CHANGED.md) |
 | **DATABASE_SCHEMA.md** | Complete database documentation | [View](DATABASE_SCHEMA.md) |
 | **REVIEW_1_COMPLETE.md** | Review 1 completion report | [View](REVIEW_1_COMPLETE.md) |
 | **IMPLEMENTATION_SUMMARY.md** | Implementation overview | [View](IMPLEMENTATION_SUMMARY.md) |
