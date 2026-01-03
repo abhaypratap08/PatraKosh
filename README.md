@@ -5,7 +5,7 @@ PatraKosh is a secure, Dropbox-like file storage application for uploading, mana
 HTML5, CSS3, JavaScript, Java 17, Spring Boot, Spring Security, JWT, MySQL, MinIO/S3, REST API
 
 ## Live Test Link
-https://patrakosh.github.io
+https://abhaypratap08.github.io/PatraKosh/
 
 ## License
 MIT License
