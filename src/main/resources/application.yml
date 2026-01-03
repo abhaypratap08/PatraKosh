@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: ${PATRAKOSH_JWT_SECRET:change-me}
+    expires-in-seconds: ${PATRAKOSH_JWT_EXPIRES:86400}
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+
+patrakosh:
+  db:
+    url: ${PATRAKOSH_DB_URL:jdbc:mysql://localhost:3306/patrakosh_db}
+    username: ${PATRAKOSH_DB_USERNAME:root}
+    password: ${PATRAKOSH_DB_PASSWORD:}
+    driver: ${PATRAKOSH_DB_DRIVER:com.mysql.cj.jdbc.Driver}
+  storage:
+    base-path: ${PATRAKOSH_STORAGE_BASE_PATH:storage}

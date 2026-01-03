@@ -1,0 +1,40 @@
+{
+  "name": "patrakosh",
+  "version": "1.0.0",
+  "description": "A modern, Dropbox-inspired file storage application",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "dev": "python -m http.server 8080",
+    "build": "echo 'Static build - ready for deployment'",
+    "deploy": "netlify deploy --prod --dir=.",
+    "test": "echo 'Tests would run here'",
+    "lint": "echo 'Linting would run here'"
+  },
+  "keywords": [
+    "file-storage",
+    "cloud-storage",
+    "dropbox-clone",
+    "spring-boot",
+    "file-management",
+    "upload",
+    "share"
+  ],
+  "author": "PatraKosh Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/PatraKosh.git"
+  },
+  "homepage": "https://patrakosh.io",
+  "bugs": {
+    "url": "https://github.com/yourusername/PatraKosh/issues"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0",
+    "vercel": "^32.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
