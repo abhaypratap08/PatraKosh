@@ -3,17 +3,17 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth-context'
 
 export default function ProtectedRoute() {
-  const { user, initializing } = useAuth()
+  const { viewer, initializing } = useAuth()
 
   if (initializing) {
     return (
-      <div className="container" style={{ maxWidth: 520 }}>
-        <div className="card">Checking session…</div>
+      <div className="container narrow-shell">
+        <div className="card status-card">Checking session...</div>
       </div>
     )
   }
 
-  if (!user) {
+  if (!viewer) {
     return <Navigate to="/login" replace />
   }
   return <Outlet />

@@ -13,17 +13,22 @@ const httpsConfig = fs.existsSync(devKeystorePath)
     }
   : undefined
 
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: '127.0.0.1',
-    port: 5173,
-    https: httpsConfig,
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_BASE_URL || (httpsConfig ? 'https://127.0.0.1:8443' : 'http://127.0.0.1:8080'),
-        changeOrigin: true,
-        secure: false
+export default defineConfig(({ command }) => {
+  const publicBase = process.env.PATRAKOSH_PUBLIC_BASE || (command === 'build' ? '/PatraKosh/' : '/')
+
+  return {
+    base: publicBase,
+    plugins: [react()],
+    server: {
+      host: '127.0.0.1',
+      port: 5173,
+      https: httpsConfig,
+      proxy: {
+        '/api': {
+          target: process.env.VITE_API_BASE_URL || (httpsConfig ? 'https://127.0.0.1:8443' : 'http://127.0.0.1:8080'),
+          changeOrigin: true,
+          secure: false
+        }
       }
     }
   }

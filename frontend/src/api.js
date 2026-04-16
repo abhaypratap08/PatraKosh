@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { appPath, currentAppPath } from './app-env'
 import { clearAuth } from './auth'
 
 const api = axios.create({
@@ -15,8 +16,8 @@ api.interceptors.response.use(
 
     if (status === 401 && !isAuthEndpoint) {
       clearAuth()
-      if (window.location.pathname !== '/login') {
-        window.location.replace('/login')
+      if (currentAppPath() !== '/login') {
+        window.location.replace(appPath('/login'))
       }
     }
 

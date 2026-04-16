@@ -1,36 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import api from '../api';
+import React from 'react'
+import { PREVIEW_LEADERBOARD } from '../preview-data'
 
-function LeaderboardPage() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    // If there were a stats endpoint, we would call it here.
-    // For now, show a placeholder.
-    setLoading(false);
-  }, []);
-
+export default function LeaderboardPage() {
   return (
-    <div className="page">
-      <h2>Leaderboard</h2>
-      <p>Top users by storage usage and activity.</p>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && (
-        <div style={{ marginTop: 24 }}>
-          <p><strong>Feature coming soon:</strong></p>
-          <ul>
-            <li>Most active users</li>
-            <li>Storage usage rankings</li>
-            <li>Upload/download counts</li>
-            <li>Team contributions</li>
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
+    <div className="page-stack">
+      <section className="card section-card">
+        <span className="eyebrow eyebrow-muted">Operational Snapshot</span>
+        <h1>Leaderboard</h1>
+        <p className="muted">
+          A polished ranking view makes it easier to surface heavy usage, hotspot teams, and review bottlenecks. The
+          live ranking API is still to come, so this page presents the intended layout with preview figures.
+        </p>
+      </section>
 
-export default LeaderboardPage;
+      <section className="card leaderboard-card">
+        {PREVIEW_LEADERBOARD.map((entry, index) => (
+          <div key={entry.id} className="leader-row">
+            <div className="leader-rank">0{index + 1}</div>
+            <div className="leader-copy">
+              <strong>{entry.name}</strong>
+              <span>{entry.secondary}</span>
+            </div>
+            <div className="leader-metric">{entry.metric}</div>
+          </div>
+        ))}
+      </section>
+    </div>
+  )
+}
