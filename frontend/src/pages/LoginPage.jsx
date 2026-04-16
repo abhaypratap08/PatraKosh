@@ -1,14 +1,19 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import api from '../api'
-import { setAuth } from '../auth'
+import { useAuth } from '../auth-context'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { user, initializing, signIn } = useAuth()
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  if (!initializing && user) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -16,7 +21,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const res = await api.post('/api/auth/login', { usernameOrEmail, password })
-      setAuth(res.data.token, res.data.user)
+      signIn(res.data.user)
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err?.response?.data?.message || 'Login failed')

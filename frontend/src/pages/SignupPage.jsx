@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import api from '../api'
-import { setAuth } from '../auth'
+import { useAuth } from '../auth-context'
 
 export default function SignupPage() {
   const navigate = useNavigate()
+  const { user, initializing, signIn } = useAuth()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -12,13 +13,17 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  if (!initializing && user) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
       const res = await api.post('/api/auth/signup', { username, email, password, confirmPassword })
-      setAuth(res.data.token, res.data.user)
+      signIn(res.data.user)
       navigate('/dashboard', { replace: true })
     } catch (err) {
       const data = err?.response?.data

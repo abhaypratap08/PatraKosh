@@ -26,6 +26,7 @@ buildNumber.properties
 
 # Storage directory (user files)
 storage/
+data/
 
 # OS
 .DS_Store
@@ -73,6 +74,7 @@ build/
 *.key
 *.crt
 keystore.jks
+.certs/
 
 # Additional Java files
 *.jar
@@ -83,6 +85,7 @@ keystore.jks
 # Spring Boot
 application-*.properties
 application-*.yml
+!src/main/resources/application-https.properties
 
 # Logs directory
 logs/

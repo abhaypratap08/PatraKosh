@@ -1,14 +1,23 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { clearAuth, getAuth } from '../auth'
+import api from '../api'
+import { useAuth } from '../auth-context'
 
 export default function AppLayout() {
   const navigate = useNavigate()
-  const { user } = getAuth()
+  const { user, signOut } = useAuth()
+  const [loggingOut, setLoggingOut] = useState(false)
 
-  const logout = () => {
-    clearAuth()
-    navigate('/login', { replace: true })
+  const logout = async () => {
+    setLoggingOut(true)
+    try {
+      await api.post('/api/auth/logout')
+    } catch {
+    } finally {
+      signOut()
+      navigate('/login', { replace: true })
+      setLoggingOut(false)
+    }
   }
 
   return (
@@ -21,7 +30,9 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <button className="btn" onClick={logout}>Logout</button>
+        <button className="btn" onClick={logout} disabled={loggingOut}>
+          {loggingOut ? 'Logging out…' : 'Logout'}
+        </button>
       </div>
 
       <div className="nav" style={{ marginBottom: 18 }}>

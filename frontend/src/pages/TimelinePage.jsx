@@ -7,9 +7,9 @@ function TimelinePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/activity')
+    api.get('/api/activity')
       .then(res => setActivities(res.data))
-      .catch(err => setError('Failed to load activity'))
+      .catch(() => setError('Failed to load activity'))
       .finally(() => setLoading(false));
   }, []);
 

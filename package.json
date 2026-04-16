@@ -24,11 +24,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/PatraKosh.git"
+    "url": "https://github.com/abhaypratap08/PatraKosh.git"
   },
-  "homepage": "https://patrakosh.io",
+  "homepage": "https://abhaypratap08.github.io/PatraKosh/",
   "bugs": {
-    "url": "https://github.com/yourusername/PatraKosh/issues"
+    "url": "https://github.com/abhaypratap08/PatraKosh/issues"
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0",

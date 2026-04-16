@@ -30,7 +30,10 @@ export default function DashboardPage() {
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [sharingFileId, setSharingFileId] = useState(null)
+  const [shareLink, setShareLink] = useState(null)
 
   const fetchAll = async () => {
     setError('')
@@ -60,6 +63,7 @@ export default function DashboardPage() {
 
     setUploading(true)
     setError('')
+    setSuccess('')
     try {
       const form = new FormData()
       form.append('file', file)
@@ -67,6 +71,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       await fetchAll()
+      setSuccess(`Uploaded ${file.name}.`)
     } catch (err) {
       setError(err?.response?.data?.message || 'Upload failed')
     } finally {
@@ -77,9 +82,14 @@ export default function DashboardPage() {
 
   const onDelete = async (id) => {
     setError('')
+    setSuccess('')
     try {
       await api.delete(`/api/files/${id}`)
+      if (shareLink?.fileId === id) {
+        setShareLink(null)
+      }
       await fetchAll()
+      setSuccess('File deleted.')
     } catch (err) {
       setError(err?.response?.data?.message || 'Delete failed')
     }
@@ -89,11 +99,72 @@ export default function DashboardPage() {
     const next = window.prompt('Rename file to:', file.filename)
     if (!next || !next.trim()) return
     setError('')
+    setSuccess('')
     try {
       await api.put(`/api/files/${file.id}`, { filename: next.trim() })
       await fetchAll()
+      setSuccess(`Renamed ${file.filename} to ${next.trim()}.`)
     } catch (err) {
       setError(err?.response?.data?.message || 'Rename failed')
+    }
+  }
+
+  const onDownload = async (file) => {
+    setError('')
+    setSuccess('')
+    try {
+      await downloadFile(file.id, file.filename)
+      setSuccess(`Downloaded ${file.filename}.`)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Download failed')
+    }
+  }
+
+  const copyShareLink = async (url) => {
+    if (!navigator.clipboard?.writeText) {
+      return false
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  const onShare = async (file) => {
+    setError('')
+    setSuccess('')
+    setSharingFileId(file.id)
+    try {
+      const res = await api.post(`/api/files/${file.id}/shares`, { expiresInHours: 24 })
+      const share = { ...res.data, fileId: file.id }
+      setShareLink(share)
+      const copied = await copyShareLink(share.shareUrl)
+      setSuccess(
+        copied
+          ? `Share link for ${file.filename} copied to your clipboard.`
+          : `Share link for ${file.filename} is ready below.`
+      )
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Share link creation failed')
+    } finally {
+      setSharingFileId(null)
+    }
+  }
+
+  const onRevokeShare = async () => {
+    if (!shareLink) return
+
+    setError('')
+    setSuccess('')
+    try {
+      await api.delete(`/api/files/${shareLink.fileId}/shares/${shareLink.id}`)
+      setShareLink(null)
+      setSuccess('Share link revoked.')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Share revocation failed')
     }
   }
 
@@ -127,6 +198,7 @@ export default function DashboardPage() {
         </div>
 
         {error ? <div className="error" style={{ marginBottom: 10 }}>{error}</div> : null}
+        {success ? <div className="success" style={{ marginBottom: 10 }}>{success}</div> : null}
 
         <div style={{ overflowX: 'auto' }}>
           <table className="table">
@@ -134,13 +206,14 @@ export default function DashboardPage() {
               <tr>
                 <th>Name</th>
                 <th>Size</th>
+                <th>Uploaded</th>
                 <th className="muted">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="muted">{loading ? 'Loading…' : 'No files found'}</td>
+                  <td colSpan={4} className="muted">{loading ? 'Loading…' : 'No files found'}</td>
                 </tr>
               ) : (
                 rows.map((f) => (
@@ -150,9 +223,13 @@ export default function DashboardPage() {
                       <div className="muted" style={{ fontSize: 12 }}>{f.mimeType || 'application/octet-stream'}</div>
                     </td>
                     <td>{formatBytes(f.fileSize)}</td>
+                    <td>{new Date(f.uploadTime).toLocaleString()}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <button className="btn" onClick={() => downloadFile(f.id, f.filename)}>Download</button>
+                        <button className="btn" onClick={() => onDownload(f)}>Download</button>
+                        <button className="btn" onClick={() => onShare(f)} disabled={sharingFileId === f.id}>
+                          {sharingFileId === f.id ? 'Sharing…' : 'Share'}
+                        </button>
                         <button className="btn" onClick={() => onRename(f)}>Rename</button>
                         <button className="btn danger" onClick={() => onDelete(f.id)}>Delete</button>
                       </div>
@@ -166,10 +243,28 @@ export default function DashboardPage() {
       </div>
 
       <div className="card">
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>Next</div>
-        <div className="muted" style={{ fontSize: 13 }}>
-          Sharing, activity feed, and the remaining screens (Team/Timeline/Leaderboard/FAQ/Review) will be wired up next.
-        </div>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}>Share Links</div>
+        {shareLink ? (
+          <div className="row">
+            <div className="muted" style={{ fontSize: 13 }}>
+              Public download link for <strong>{shareLink.filename}</strong>. It expires on{' '}
+              {new Date(shareLink.expiresAt).toLocaleString()}.
+            </div>
+            <input className="input" readOnly value={shareLink.shareUrl} />
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn" onClick={() => copyShareLink(shareLink.shareUrl)}>Copy link</button>
+              <a className="btn" href={shareLink.shareUrl} target="_blank" rel="noreferrer">Open link</a>
+              <button className="btn danger" onClick={onRevokeShare}>Revoke</button>
+            </div>
+            <div className="muted" style={{ fontSize: 12 }}>
+              Downloads via this link: {shareLink.accessCount}
+            </div>
+          </div>
+        ) : (
+          <div className="muted" style={{ fontSize: 13 }}>
+            Create a 24-hour public download link from any file row. You can revoke the current link from here.
+          </div>
+        )}
       </div>
     </div>
   )
