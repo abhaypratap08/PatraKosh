@@ -1,177 +1,22 @@
 # PatraKosh
 
-PatraKosh is a secure, Dropbox-like file storage application with:
+A secure, self-hosted file storage app — think personal Dropbox — built with Spring Boot and React.
 
-- a Spring Boot API for account management, file storage, activity history, and expiring share links
-- a React + Vite web client
-- a JavaFX desktop client that reuses the same persisted account store
+Store, share, and manage files locally with features like expiring share links, activity history, search, and storage stats. Includes both a web client and a JavaFX desktop client.
 
-The project runs on the local filesystem by default. It does not require MySQL, MinIO, or S3.
+**Stack:** Java 17 · Spring Boot 3 · React 18 · Vite 5 · JavaFX 21
 
-## Features
-
-- PBKDF2 password hashing
-- server-side session management with expiry and logout
-- HttpOnly, `SameSite=Strict` session cookies for the web app
-- rate limiting for login, signup, and public share downloads
-- upload, rename, delete, download, search, and storage stats
-- expiring public share links with revoke support
-- persisted users, sessions, files, shares, and activity in `data/state.json`
-- user-scoped desktop storage for the JavaFX client
-
-## Tech Stack
-
-- Java 17
-- Spring Boot 3
-- React 18
-- Vite 5
-- JavaFX 21
-- local filesystem storage
-
-## Project Layout
-
-- `src/main/java/com/patrakosh/api`: Spring Boot API
-- `src/main/java/com/patrakosh/controller`: JavaFX controllers
-- `src/main/java/com/patrakosh/persistence`: persisted application state
-- `frontend/`: React + Vite web app
-- `scripts/`: HTTPS certificate and smoke-test helpers
-
-## Prerequisites
-
-- JDK 17 or newer
-- Node.js 18 or newer
-- npm
-
-## Run Locally
-
-### API over HTTP
-
+**Quick start:**
 ```bash
+# API
 mvn -Dspring-boot.run.mainClass=com.patrakosh.api.ApiApplication spring-boot:run
+
+# Web client
+cd frontend && npm ci && npm run dev
 ```
 
-The API will start on `http://127.0.0.1:8080`.
+See the [full docs](src/main/resources/application.properties) for HTTPS setup, config options, and environment variables.
 
-### Web Client
+**Live demo:** https://abhaypratap08.github.io/PatraKosh/
 
-```bash
-cd frontend
-npm ci
-npm run dev
-```
-
-By default the Vite dev server runs on `http://127.0.0.1:5173`.
-
-### Desktop Client
-
-```bash
-mvn javafx:run
-```
-
-## HTTPS Development Mode
-
-PatraKosh includes a local HTTPS workflow for testing secure cookies end to end.
-
-### 1. Generate the dev certificate
-
-```bash
-./scripts/ensure-dev-https-cert.sh
-```
-
-This creates a PKCS12 keystore at `.certs/patrakosh-dev.p12`.
-
-### 2. Start the API with the HTTPS profile
-
-```bash
-mvn -Dspring-boot.run.mainClass=com.patrakosh.api.ApiApplication -Dspring-boot.run.profiles=https spring-boot:run
-```
-
-The API will start on `https://127.0.0.1:8443`.
-
-### 3. Start the frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-If `.certs/patrakosh-dev.p12` exists, Vite will start on `https://127.0.0.1:5173` and proxy `/api` to the HTTPS API.
-
-### 4. Run the end-to-end HTTPS smoke test
-
-```bash
-./scripts/smoke-test-https.sh
-```
-
-This script:
-
-- starts the HTTPS API
-- starts the Vite dev server
-- signs up a user over HTTPS
-- verifies the secure session cookie
-- checks `/api/auth/me` directly on the API and through the Vite proxy
-- logs out and confirms the session is invalidated
-
-## Configuration
-
-Default runtime configuration lives in:
-
-- [src/main/resources/application.properties](src/main/resources/application.properties)
-- [src/main/resources/application-https.properties](src/main/resources/application-https.properties)
-
-Common environment variables:
-
-- `PATRAKOSH_DATA_BASE_PATH`: location of persisted state, default `data`
-- `PATRAKOSH_STORAGE_BASE_PATH`: location of uploaded files, default `storage`
-- `PATRAKOSH_AUTH_SESSION_TTL_SECONDS`: session lifetime, default `43200`
-- `PATRAKOSH_AUTH_COOKIE_NAME`: session cookie name, default `PATRAKOSH_SESSION`
-- `PATRAKOSH_AUTH_COOKIE_SAME_SITE`: cookie SameSite mode, default `Strict`
-- `PATRAKOSH_AUTH_COOKIE_FORCE_SECURE`: force secure cookies, default `false`, enabled by the HTTPS profile
-- `PATRAKOSH_CORS_ALLOWED_ORIGINS`: allowed web origins
-- `PATRAKOSH_SSL_KEY_STORE`: HTTPS keystore path for the HTTPS profile
-- `PATRAKOSH_SSL_KEY_STORE_PASSWORD`: HTTPS keystore password
-- `PATRAKOSH_SSL_KEY_ALIAS`: HTTPS certificate alias
-
-## Persistence
-
-By default:
-
-- uploaded file contents are stored under `storage/`
-- application state is stored in `data/state.json`
-
-These paths are ignored by Git and intended to be local runtime data.
-
-## Verification
-
-Backend tests:
-
-```bash
-mvn clean test
-```
-
-Frontend build:
-
-```bash
-cd frontend
-npm run build
-```
-
-HTTPS smoke test:
-
-```bash
-./scripts/smoke-test-https.sh
-```
-
-## Security Notes
-
-- The web app uses HttpOnly cookies rather than exposing auth tokens to browser JavaScript.
-- For real deployments, serve the app behind HTTPS and keep `PATRAKOSH_AUTH_COOKIE_FORCE_SECURE=true`.
-- The local HTTPS certificate generated by `scripts/ensure-dev-https-cert.sh` is for development only.
-
-## Live Link
-
-https://abhaypratap08.github.io/PatraKosh/
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+MIT License
